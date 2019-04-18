@@ -98,13 +98,15 @@ public class Recommender {
 
 
     public static void main(String[] args) throws Exception {
-        String posts = "C:\\Users\\Achil\\Downloads\\dummy.tsv"; //Posts Type1_filtered
-        String answers = "C:\\Users\\Achil\\Downloads\\Posts Type2.tsv";
+
+        String posts = args[0];
+        String answers = args[1];
+        int howMany = 2;
         Recommender sg = new Recommender(posts, answers);
         Set<String> set = new HashSet<>();
         set.add("c#");
         set.add(".net");
-        sg.findBestMatches(set,2);
+        sg.findBestMatches(set,howMany);
     }
 
 }

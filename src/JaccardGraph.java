@@ -51,7 +51,7 @@ public class JaccardGraph {
     }
 
     // multithreaded execution
-    private void findSimilaritiesParallel(String outputFile) throws Exception {
+    private void findSimilaritiesParallel(final double threshold, String outputFile) throws Exception {
 
         AtomicInteger countdown = new AtomicInteger(0);
         int numOfThreads = Runtime.getRuntime().availableProcessors();
@@ -93,7 +93,7 @@ public class JaccardGraph {
 
                             if (w3 != 0) {
                                 float jaccardSimilarity = (float) w3 / (w1 + w2 - w3);
-                                if (jaccardSimilarity >= 0.2) {
+                                if (jaccardSimilarity >= threshold) {
                                     sb.append(" ");
                                     sb.append(post2.getId());
                                     sb.append(" ");
@@ -159,8 +159,9 @@ public class JaccardGraph {
     public static void main(String[] args) throws Exception {
         String inputFile = args[0];
         String outputFile = args[1];
+        double threshold = 0.8;
         JaccardGraph sg = new JaccardGraph(inputFile);
-        sg.findSimilaritiesParallel(outputFile);
+        sg.findSimilaritiesParallel(threshold, outputFile);
     }
 
 }
