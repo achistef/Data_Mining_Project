@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Creates a "Jaccard" Graph. It creates edges by comparing
  * all nodes based on weighted Jaccard similarity.
  */
-public class JaccardGraph {
+public class PostsJaccardGraph {
 
     // input file with posts
     private final File posts_file;
@@ -24,7 +24,7 @@ public class JaccardGraph {
 
 
 
-    public JaccardGraph(String inputFile) throws Exception {
+    public PostsJaccardGraph(String inputFile) throws Exception {
         this.tagPosts = new ArrayList<>();
         this.tagCounter = new CountMap<>();
         this.posts_file = new File(inputFile);
@@ -160,7 +160,7 @@ public class JaccardGraph {
         String inputFile = args[0];
         String outputFile = args[1];
         double threshold = 0.8;
-        JaccardGraph sg = new JaccardGraph(inputFile);
+        PostsJaccardGraph sg = new PostsJaccardGraph(inputFile);
         sg.findSimilaritiesParallel(threshold, outputFile);
     }
 

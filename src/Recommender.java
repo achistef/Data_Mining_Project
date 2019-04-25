@@ -85,6 +85,7 @@ public class Recommender {
                 if(answerPosts.isEmpty()) break;
             }
         }
+        System.out.println(users);
 
     }
 
@@ -99,8 +100,8 @@ public class Recommender {
 
     public static void main(String[] args) throws Exception {
 
-        String posts = args[0];
-        String answers = args[1];
+        String posts = "C:\\Users\\Achil\\Downloads\\dm\\dummy.tsv"; //args[0];
+        String answers = "C:\\Users\\Achil\\Downloads\\dm\\Posts Type2.tsv";  //args[1];
         int howMany = 2;
         Recommender sg = new Recommender(posts, answers);
         Set<String> set = new HashSet<>();

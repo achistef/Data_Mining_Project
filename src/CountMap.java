@@ -59,6 +59,10 @@ public class CountMap<K extends Comparable<K>>
         return result;
     }
 
+    public Set<K> keySet(){
+        return this.map.keySet();
+    }
+
     /**
      * Clears the map. A clean map contains no elements
      */
