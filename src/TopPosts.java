@@ -9,10 +9,15 @@ public class TopPosts {
         PrintWriter writer = new PrintWriter(output);
         Scanner sc = new Scanner(new File(input));
         MyTreeMap<Integer, String> treeMap = new MyTreeMap<>(howMany);
+        
+        // Skip the first line
+        sc.nextLine();
+
         while(sc.hasNext()){
             String next = sc.nextLine();
             if(!next.equals("")){
                 String[] split = next.split("\t");
+                
                 int views = Integer.parseInt(split[4]);
                 treeMap.put(views, next);
             }
@@ -29,8 +34,8 @@ public class TopPosts {
     public static void main(String[] args) throws Exception{
         String inputFile = args[0];
         String outputFile = args[1];
-        Integer howMany = Integer.parseInt(args[2]);
+        int howMany = Integer.parseInt(args[2]);
         TopPosts tp = new TopPosts();
-        tp.keepTop(inputFile, 1000, outputFile);
+        tp.keepTop(inputFile, howMany, outputFile);
     }
 }

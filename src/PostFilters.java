@@ -43,10 +43,16 @@ public class PostFilters {
 
         String inputFile = args[0];
         String outputFile = args[1];
-        String date = "2017";
+        String date = null;
+        if (args.length > 2){
+            date = args[2];
+        }
         PostFilters filter = new PostFilters();
-        //filter.filter_noAnswer(inputFile);
-        filter.filter_byDate(inputFile, date, outputFile);
+        if (date == null){
+            filter.filter_noAnswer(inputFile, outputFile);
+        }else{
+            filter.filter_byDate(inputFile, date, outputFile);
+        }
     }
 
 }

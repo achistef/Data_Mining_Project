@@ -1,0 +1,10 @@
+ID	 Accepted_Answer_ID	Creation_Date	Score	View_Count	Owner_ID	Tags
+1	7	2008-07-31	604	39047	8	c#,floating-point,type-conversion,double,decimal
+2	31	2008-07-31	273	17307	9	html,css,css3,internet-explorer-7
+3	14	2008-07-31	1743	519	1	c#,.net,datetime
+4	12	2008-07-31	1409	142	1	c#,datetime,time,datediff,relative-time-span
+5	52	2008-08-01	568	165	9	html,browser,timezone,user-agent,timezone-offset
+6	null	2008-08-01	390	11	1	.net,math
+7	126	2008-08-01	121	80	2	c#,linq,web-services,.net-3.5
+8	26	2009-08-01	171	68968	2	mysql,database,binary-data,data-storage
+9	531	2010-08-01	305	44869	1	performance,algorithm,language-agnostic,unix,pi
