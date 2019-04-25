@@ -6,7 +6,7 @@ All input/output is defined from the arguments of the execution.
 1) XML_to_TSV : Converts Lucian's XML file to a TSV file. It takes 3 arguments, one for input and two for output.  The first output file
 contains "type 1" posts (a.k.a questions) while the second output file contains "type 2" posts (a.k.a.) answers
 
-2) RowCounter : I needed a simple way to count those millions of lines... so here we go!
+2) RowCounter : We needed a simple way to count those millions of lines... so here we go!
 
 3) PostFilters : This class can filter posts based on i) the date of the posts and ii) whether the question is answered
 
