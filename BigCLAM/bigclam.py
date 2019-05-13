@@ -49,18 +49,20 @@ def gen_comm(nodes, communities):
     for i in range(nodes):
         for j in range(communities):
             prob = random.random()
-            if prob > 0.85:
+            if prob > 0.7:
                 B[i, j] = prob
     return B
 
 
 # generates node-to-node adjacency matrix from community matrix
 def gen_adjacency(G, N, threshold):
+    print(G)
     A = np.zeros((N, N), dtype=np.int8)
     for i in range(len(A)):
         for j in range(len(A)):
-            prod = 1 - np.exp(-(np.dot(G[i], G[j])))
-            if prod > threshold and i != j:
+            #prod = 1 - np.exp(-(np.dot(G[i], G[j])))
+            prod = np.dot(G[i], G[j])
+            if prod > random.random() and i != j:
                 A[i, j] = 1
     return A
 
@@ -127,8 +129,11 @@ def find_f(A, C, iterations=10):
     N = A.shape[0]
     F = np.random.rand(N, C)
 
+    n = 0
     # 1. compute gradient of row u
-    for n in range(iterations):
+    while True:
+    #for n in range(iterations):
+        prevll = log_likelihood(F, A)
         for person in range(N):
             grad = gradient(F, A, person)
             # 2. update the row
@@ -136,13 +141,16 @@ def find_f(A, C, iterations=10):
 
             # 3. Project Fu back to a non-negative vector
             F[person] = np.maximum(0.001, F[person])  # F should be nonnegative
-        #ll = log_likelihood(F, A)
-        #print('At step %5i/%5i ll is %5.3f' % (n, iterations, ll))
-        print('At step %5i/%5i' % (n, iterations))
+        ll = log_likelihood(F, A)
+        n += 1
+        print('At step %5i/%5i ll is %5.3f / %5.3f' % (n, iterations, ll, np.abs((prevll-ll)/ll)))
+        if np.abs((prevll-ll)/ll) < 0.05:
+            break
+        #print('At step %5i/%5i' % (n, iterations))
     return F
 
 
-def gen_graph(F):
+def gen_graph(F, Fmax):
     # create an empty graph
     G = nx.Graph()
     # add nodes into the graph, shape(F)[0] is the # of columns of F
@@ -154,26 +162,27 @@ def gen_graph(F):
         prob = 1 - np.exp(np.dot(-F[u],F[v]))
         if prob >= random.random():
             G.add_edge(u, v)
+
     return G
 
 
 def main():
-    num_of_comms = 4
+    num_of_comms = 10
     # create social networkB
 
-    B = gen_comm(500, num_of_comms)
+    B = gen_comm(2000, num_of_comms)
 
     # from B, create G, or adjacency network
-    adj = gen_adjacency(B, len(B), 0.1)
+    adj = gen_adjacency(B, len(B), 0.8)
     print(adj)
-    F = find_f(adj, num_of_comms, 100)
+    F = find_f(adj, num_of_comms, 300)
     print(F)
     # np.argmax finds the node's highest community
     F_max = np.argmax(F, 1)
     #print("FMAX: ", F_max, " length: ", len(F_max))
-    f_graph = gen_graph(F)
-    nx.draw_networkx(f_graph, with_labels=False, node_size=500)
-    plt.savefig('fig.png')
+    f_graph = gen_graph(F, F_max)
+    nx.draw(f_graph, node_size=1, width=0.1, font_size=0.5, pos=nx.spring_layout(f_graph, iterations=10))
+    plt.savefig('fig.svg')
     plt.show()
 
 
