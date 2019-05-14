@@ -33,6 +33,12 @@ test = [
 ]
 
 
+# (not used) calculates probability of a connection between two nodes in a graph
+def calculate_p(G, u, v):
+    first_step = 0
+    first_step += np.dot(G[u], G[v])
+    second_step = 1 - np.exp(-first_step)
+    return second_step
 
 
 # generates a random community matrix with a number of nodes and communities
@@ -70,10 +76,7 @@ def gen_rand_adjacency(G, N, threshold):
     return A
 
 
-
-
-
-
+# generates a {0,1} adjacency matrix
 def gen_adjacency(G, N):
     A = np.zeros((N, N), dtype=np.int8)
     for u in range(np.shape(G)[0]):
@@ -83,12 +86,7 @@ def gen_adjacency(G, N):
                 A[u,v] = 1
     return A
 
-# (not used) calculates probability of a connection between two nodes in a graph
-def calculate_p(G, u, v):
-    first_step = 0
-    first_step += np.dot(G[u], G[v])
-    second_step = 1 - np.exp(-first_step)
-    return second_step
+
 
 
 
@@ -99,7 +97,8 @@ def sigm(x):
 
 
 def log_likelihood(F, A):
-    """implements equation 2 of 
+    """
+    implements equation 2 of
     https://cs.stanford.edu/people/jure/pubs/bigclam-wsdm13.pdf
     """
     A_soft = F.dot(F.T)
@@ -116,7 +115,9 @@ def log_likelihood(F, A):
 
 
 def gradient(F, A, u):
-    """Implements equation 3 of
+    """
+    The longest step in the process
+    Implements equation 3 of
     https://cs.stanford.edu/people/jure/pubs/bigclam-wsdm13.pdf
 
       * u indicates the row under consideration
@@ -141,6 +142,13 @@ def gradient(F, A, u):
 
 
 def find_f(A, C, iterations=10):
+    """
+    The BigClam algorithm
+    :param A: Adjacency matrix
+    :param C: number of communities
+    :param iterations: (optional) when fitting, set a limit to how many iterations the algorithm should do
+    :return: Affiliation matrix
+    """
     # initialize an F
     N = A.shape[0]
     F = np.random.rand(N, C)
@@ -167,6 +175,11 @@ def find_f(A, C, iterations=10):
 
 
 def gen_graph(F, Fmax):
+    """
+    Generate the graph so it can be drawn
+    :param F: fitted preferential matrix after bigClam has been run
+    :param Fmax: Preferred communities of nodes in F
+    """
     # create an empty graph
     colors = ['r', 'g', 'b']
     G = nx.Graph()
@@ -186,8 +199,9 @@ def gen_graph(F, Fmax):
     return G
 
 
-
-
+'''
+Create random graph and bigClam it
+'''
 def random_main():
     num_of_comms = 2
     # create social networkB
