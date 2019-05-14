@@ -181,7 +181,7 @@ def gen_graph(F, Fmax):
     :param Fmax: Preferred communities of nodes in F
     """
     # create an empty graph
-    colors = ['r', 'g', 'b']
+    colors = ['r', 'g', 'b', 'pink', 'yellow']
     G = nx.Graph()
     # add nodes into the graph, shape(F)[0] is the # of columns of F
     G.add_nodes_from(range(np.shape(F)[0]))
@@ -203,13 +203,13 @@ def gen_graph(F, Fmax):
 Create random graph and bigClam it
 '''
 def random_main():
-    num_of_comms = 2
+    num_of_comms = 5
     # create social networkB
 
-    B = gen_rand_comm(10, num_of_comms)
+    B = gen_rand_comm(1000, num_of_comms)
 
     # from B, create G, or adjacency network
-    adj = gen_rand_adjacency(B, len(B), 0.5)
+    adj = gen_rand_adjacency(B, len(B), 0.8)
     print(adj)
     F = find_f(adj, num_of_comms, 100)
     print(F)
@@ -217,13 +217,16 @@ def random_main():
     F_max = np.argmax(F, 1)
     #print("FMAX: ", F_max, " length: ", len(F_max))
     f_graph = gen_graph(F, F_max)
-    nx.draw(f_graph, node_size=1, width=0.1, font_size=0.5, pos=nx.spring_layout(f_graph, iterations=10))
+    edges = f_graph.edges()
+    colors = [f_graph[u][v]['color'] for u, v in edges]
+    nx.draw(f_graph, node_size=1, width=0.1, font_size=0.5, edge_color=colors,
+            pos=nx.spring_layout(f_graph, iterations=20))
     plt.savefig('fig.svg')
     plt.show()
 
 
 def main():
-    num_of_comms = 3
+    num_of_comms = 5
     # create social networkB
 
     f = open('jaccard.txt', 'r')
@@ -244,7 +247,7 @@ def main():
     f_graph = gen_graph(F, F_max)
     edges = f_graph.edges()
     colors = [f_graph[u][v]['color'] for u, v in edges]
-    nx.draw(f_graph, node_size=1, width=0.1, font_size=0.5, edge_color=colors, pos=nx.spring_layout(f_graph, iterations=10))
+    nx.draw(f_graph, node_size=1, width=0.1, font_size=0.5, edge_color=colors, pos=nx.spring_layout(f_graph, iterations=20))
     plt.savefig('fig.svg')
     plt.show()
 
