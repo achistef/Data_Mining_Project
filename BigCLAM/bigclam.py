@@ -33,6 +33,8 @@ test = [
 ]
 
 
+
+
 # generates a random community matrix with a number of nodes and communities
 def create_random_matrix(node_num, community_num):
     F = np.matrix(np.ones((node_num, community_num)))
@@ -44,7 +46,7 @@ def create_random_matrix(node_num, community_num):
 
 
 # generates a random community matrix with a number of nodes and communities
-def gen_comm(nodes, communities):
+def gen_rand_comm(nodes, communities):
     B = np.zeros((nodes, communities))
     for i in range(nodes):
         for j in range(communities):
@@ -55,17 +57,31 @@ def gen_comm(nodes, communities):
 
 
 # generates node-to-node adjacency matrix from community matrix
-def gen_adjacency(G, N, threshold):
+def gen_rand_adjacency(G, N, threshold):
     print(G)
-    A = np.zeros((N, N), dtype=np.int8)
+    A = np.zeros((N, N))
     for i in range(len(A)):
         for j in range(len(A)):
-            #prod = 1 - np.exp(-(np.dot(G[i], G[j])))
-            prod = np.dot(G[i], G[j])
+            #A[i, j] = 1 - np.exp(-(np.dot(G[i], G[j])))
+            prod = 1 - np.exp(-(np.dot(G[i], G[j])))
+            #prod = np.dot(G[i], G[j])
             if prod > random.random() and i != j:
                 A[i, j] = 1
     return A
 
+
+
+
+
+
+def gen_adjacency(G, N):
+    A = np.zeros((N, N), dtype=np.int8)
+    for u in range(np.shape(G)[0]):
+        for v in range(np.shape(G)[0]):
+            #print((u, v), ">> ", G[u, v])
+            if G[u,v] > 0.0:
+                A[u,v] = 1
+    return A
 
 # (not used) calculates probability of a connection between two nodes in a graph
 def calculate_p(G, u, v):
@@ -130,28 +146,29 @@ def find_f(A, C, iterations=10):
     F = np.random.rand(N, C)
 
     n = 0
+    prevll = 0
     # 1. compute gradient of row u
     while True:
     #for n in range(iterations):
-        prevll = log_likelihood(F, A)
         for person in range(N):
             grad = gradient(F, A, person)
             # 2. update the row
             F[person] += 0.005 * grad
 
             # 3. Project Fu back to a non-negative vector
-            F[person] = np.maximum(0.001, F[person])  # F should be nonnegative
+            F[person] = np.maximum(0.00000001, F[person])  # F should be nonnegative
         ll = log_likelihood(F, A)
         n += 1
         print('At step %5i/%5i ll is %5.3f / %5.3f' % (n, iterations, ll, np.abs((prevll-ll)/ll)))
-        if np.abs((prevll-ll)/ll) < 0.05:
+        if np.abs((prevll-ll)/ll) < 0.01 or n > iterations:
             break
-        #print('At step %5i/%5i' % (n, iterations))
+        prevll = ll
     return F
 
 
 def gen_graph(F, Fmax):
     # create an empty graph
+    colors = ['r', 'g', 'b']
     G = nx.Graph()
     # add nodes into the graph, shape(F)[0] is the # of columns of F
     G.add_nodes_from(range(np.shape(F)[0]))
@@ -159,23 +176,28 @@ def gen_graph(F, Fmax):
     for pairs in combinations(G.nodes(), 2):
         [u, v] = pairs
         # create links
-        prob = 1 - np.exp(np.dot(-F[u],F[v]))
-        if prob >= random.random():
-            G.add_edge(u, v)
-
+        prob = 1 - np.exp(-F[u,:]*F[v,:].transpose())
+        for p in prob:
+            if p >= 1.0 and not G.has_edge(u,v):
+                G.add_edge(u, v, color='black')
+        #print((Fmax[u], Fmax[v]))
+        if Fmax[u] == Fmax[v]:
+            G.add_edge(u,v, color=colors[Fmax[u]])
     return G
 
 
-def main():
-    num_of_comms = 10
+
+
+def random_main():
+    num_of_comms = 2
     # create social networkB
 
-    B = gen_comm(2000, num_of_comms)
+    B = gen_rand_comm(10, num_of_comms)
 
     # from B, create G, or adjacency network
-    adj = gen_adjacency(B, len(B), 0.8)
+    adj = gen_rand_adjacency(B, len(B), 0.5)
     print(adj)
-    F = find_f(adj, num_of_comms, 300)
+    F = find_f(adj, num_of_comms, 100)
     print(F)
     # np.argmax finds the node's highest community
     F_max = np.argmax(F, 1)
@@ -186,4 +208,32 @@ def main():
     plt.show()
 
 
+def main():
+    num_of_comms = 3
+    # create social networkB
+
+    f = open('jaccard.txt', 'r')
+    user_to_user = eval(f.read())
+    f.close()
+    B = nx.from_dict_of_dicts(user_to_user)
+
+    # from B, create G, or adjacency network
+    adj2 = nx.adjacency_matrix(B)
+    adj = gen_adjacency(adj2, np.shape(adj2)[0])
+
+    print(adj)
+    F = find_f(adj, num_of_comms, 100)
+    print(F)
+    # np.argmax finds the node's highest community
+    F_max = np.argmax(F, 1)
+    print("FMAX: ", F_max, " length: ", len(F_max))
+    f_graph = gen_graph(F, F_max)
+    edges = f_graph.edges()
+    colors = [f_graph[u][v]['color'] for u, v in edges]
+    nx.draw(f_graph, node_size=1, width=0.1, font_size=0.5, edge_color=colors, pos=nx.spring_layout(f_graph, iterations=10))
+    plt.savefig('fig.svg')
+    plt.show()
+
+
 main()
+#random_main()
