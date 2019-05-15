@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Creates a "Jaccard" Graph. It creates edges by comparing
+ * Creates a "Jaccard" similarity Graph. Nodes are posts. It creates edges by comparing
  * all nodes based on weighted Jaccard similarity.
  */
 public class PostsJaccardGraph {
@@ -76,7 +76,6 @@ public class PostsJaccardGraph {
                         TagPostPreweighted post1 = tagPosts.get(counter);
                         final List<String> tags1 = post1.getTags();
                         int w1 = post1.getWeight();
-                        sb.append(post1.getId());
 
                         for (int j = counter + 1; j < top; j++) {
 
@@ -94,14 +93,16 @@ public class PostsJaccardGraph {
                             if (w3 != 0) {
                                 float jaccardSimilarity = (float) w3 / (w1 + w2 - w3);
                                 if (jaccardSimilarity >= threshold) {
-                                    sb.append(" ");
+                                    sb.append(post1.getId());
+                                    sb.append("\t");
                                     sb.append(post2.getId());
-                                    sb.append(" ");
+                                    sb.append("\t");
                                     sb.append(df.format(jaccardSimilarity));
+                                    sb.append("\n");
                                 }
                             }
                         }
-                        writer.println(sb.toString());
+                        writer.print(sb.toString());
                     }
                 }
             };
