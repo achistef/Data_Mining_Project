@@ -4,6 +4,7 @@ import numpy as np
 import networkx as nx
 from itertools import combinations
 import matplotlib.pyplot as plt
+import math
 
 '''
 Some letters used in the paper:
@@ -74,6 +75,38 @@ def gen_rand_adjacency(G, N, threshold):
             if prod > random.random() and i != j:
                 A[i, j] = 1
     return A
+
+
+def create_gephy_graph():
+    f = open('jaccard.txt', 'r')
+    f2= open("jaccard_gephi.txt","w+")
+    user_to_user = eval(f.read())
+    f.close()
+    B = nx.from_dict_of_dicts(user_to_user)
+    for line in B:
+        for item in B[line]:
+            my_str = str(line) + ", "
+            my_str += str(item) + ", "
+            my_str += str(B[line][item]["weight"])
+        f2.write(my_str + "\n")
+    f2.close()
+
+
+def create_new_adj():
+    f = open('jaccard.txt', 'r')
+    user_to_user = eval(f.read())
+    f.close()
+    B = nx.from_dict_of_dicts(user_to_user)
+    m_size = len(B)
+    A = np.zeros((m_size, m_size))
+    for u, line in enumerate(B):
+        for v, item in enumerate(B[line]):
+            weight = B[line][item]["weight"]
+        if weight > 0.0:
+            #print(u,v, weight)
+            A[u, v] = 1
+    return A
+
 
 
 # generates a {0,1} adjacency matrix
@@ -168,7 +201,7 @@ def find_f(A, C, iterations=10):
         ll = log_likelihood(F, A)
         n += 1
         print('At step %5i/%5i ll is %5.3f / %5.3f' % (n, iterations, ll, np.abs((prevll-ll)/ll)))
-        if np.abs((prevll-ll)/ll) < 0.01 or n > iterations:
+        if np.abs((prevll-ll)/ll) < 0.01 and n > iterations:
             break
         prevll = ll
     return F
@@ -181,7 +214,7 @@ def gen_graph(F, Fmax):
     :param Fmax: Preferred communities of nodes in F
     """
     # create an empty graph
-    colors = ['r', 'g', 'b', 'pink', 'yellow']
+    colors = ['red', 'green', 'blue', 'pink', 'yellow', 'orange', 'magenta', 'indigo', 'cyan']
     G = nx.Graph()
     # add nodes into the graph, shape(F)[0] is the # of columns of F
     G.add_nodes_from(range(np.shape(F)[0]))
@@ -192,7 +225,7 @@ def gen_graph(F, Fmax):
         prob = 1 - np.exp(-F[u,:]*F[v,:].transpose())
         for p in prob:
             if p >= 1.0 and not G.has_edge(u,v):
-                G.add_edge(u, v, color='black')
+                G.add_edge(u, v, color='silver')
         #print((Fmax[u], Fmax[v]))
         if Fmax[u] == Fmax[v]:
             G.add_edge(u,v, color=colors[Fmax[u]])
@@ -211,7 +244,7 @@ def random_main():
     # from B, create G, or adjacency network
     adj = gen_rand_adjacency(B, len(B), 0.8)
     print(adj)
-    F = find_f(adj, num_of_comms, 100)
+    F = find_f(adj, num_of_comms, 10)
     print(F)
     # np.argmax finds the node's highest community
     F_max = np.argmax(F, 1)
@@ -225,10 +258,7 @@ def random_main():
     plt.show()
 
 
-def main():
-    num_of_comms = 5
-    # create social networkB
-
+def garbage():
     f = open('jaccard.txt', 'r')
     user_to_user = eval(f.read())
     f.close()
@@ -238,8 +268,14 @@ def main():
     adj2 = nx.adjacency_matrix(B)
     adj = gen_adjacency(adj2, np.shape(adj2)[0])
 
+
+def main():
+    num_of_comms = 9
+    # create social networkB
+
+    adj = create_new_adj()
     print(adj)
-    F = find_f(adj, num_of_comms, 100)
+    F = find_f(adj, num_of_comms, 1000)
     print(F)
     # np.argmax finds the node's highest community
     F_max = np.argmax(F, 1)
@@ -247,10 +283,13 @@ def main():
     f_graph = gen_graph(F, F_max)
     edges = f_graph.edges()
     colors = [f_graph[u][v]['color'] for u, v in edges]
-    nx.draw(f_graph, node_size=1, width=0.1, font_size=0.5, edge_color=colors, pos=nx.spring_layout(f_graph, iterations=20))
-    plt.savefig('fig.svg')
+    #nx.draw(f_graph, node_color="black", node_size=0.5, width=0.05, font_size=0.5, edge_color=colors, pos=nx.spring_layout(f_graph, iterations=200))
+    nx.draw(f_graph, node_color="black", node_size=0.5, width=0.05, font_size=0.5, edge_color=colors,
+            pos=nx.kamada_kawai_layout(f_graph))
+    plt.savefig('fig2.svg')
     plt.show()
 
 
 main()
 #random_main()
+
