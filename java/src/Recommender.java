@@ -64,7 +64,8 @@ public class Recommender {
             String[] split = next.split("\t");
             int postID = Integer.parseInt(split[0]);
             if(relativePosts.contains(postID)){
-                answerPosts.add(Integer.parseInt(split[1]));
+                if(!split[1].equals("null"))
+                    answerPosts.add(Integer.parseInt(split[1]));
                 relativePosts.remove((Integer)postID);
                 if(relativePosts.isEmpty()) break;
             }

@@ -61,6 +61,9 @@ public class PostsJaccardGraph {
         PrintWriter writer = new PrintWriter(new File(outputFile));
         DecimalFormat df = new DecimalFormat("#.00");
 
+        //header
+        writer.println("source\ttarget\tweight");
+
         for (int i = 0; i < numOfThreads; i++) {
             Runnable runnable = new Runnable() {
                 @Override
