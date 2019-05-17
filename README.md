@@ -2,7 +2,7 @@ This Project is for the data-mining course 2019 ID2211 at the KTH.
 
 
 ## The Report
-The actual report of the project can be found [here](<https://www.overleaf.com/4384869346ftdmfmtdcnxt?fbclid=IwAR3YVlVLxt4UjYUFuMVIyugZ69ESR9gUKY1enTrolP5vWEOfAYnS5uyRhM8>).
+The actual report of the project can be found [here](https://www.overleaf.com/read/wrgfwpzgdkhm).
 
 ## The Goal
 We want to analyse Stack Overflow's Community structure and also came up with a way to predict users which are capable of answering a specific question
