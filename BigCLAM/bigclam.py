@@ -4,7 +4,6 @@ import numpy as np
 import networkx as nx
 from itertools import combinations
 import matplotlib.pyplot as plt
-import math
 
 '''
 Some letters used in the paper:
@@ -26,6 +25,8 @@ Step-by-step:
 
 '''
 
+communities = {}
+user_tags = []
 
 test = [
     [0, 1.2, 0, 0.2],
@@ -93,18 +94,20 @@ def create_gephy_graph():
 
 
 def create_new_adj():
-    f = open('jaccard.txt', 'r')
+    f = open('jaccard005.txt', 'r')
     user_to_user = eval(f.read())
     f.close()
     B = nx.from_dict_of_dicts(user_to_user)
     m_size = len(B)
     A = np.zeros((m_size, m_size))
     for u, line in enumerate(B):
+        user_tags.append(line)
         for v, item in enumerate(B[line]):
             weight = B[line][item]["weight"]
-        if weight > 0.0:
+        if weight > 0.0 and u != v:
             #print(u,v, weight)
             A[u, v] = 1
+            A[v, u] = 1
     return A
 
 
@@ -214,21 +217,31 @@ def gen_graph(F, Fmax):
     :param Fmax: Preferred communities of nodes in F
     """
     # create an empty graph
-    colors = ['red', 'green', 'blue', 'pink', 'yellow', 'orange', 'magenta', 'indigo', 'cyan']
+    colors = ['red', 'pink', 'magenta', 'deeppink',
+              'green', 'darkgreen', 'indigo', 'lime',
+              'blue', 'darkcyan', 'navy', 'cyan',
+              'yellow', 'orange', 'brown',
+              ]
+    print("Len colors: ", len(colors))
     G = nx.Graph()
     # add nodes into the graph, shape(F)[0] is the # of columns of F
     G.add_nodes_from(range(np.shape(F)[0]))
     # generate edges
+    max_p = 0
+
     for pairs in combinations(G.nodes(), 2):
         [u, v] = pairs
         # create links
         prob = 1 - np.exp(-F[u,:]*F[v,:].transpose())
         for p in prob:
-            if p >= 1.0 and not G.has_edge(u,v):
-                G.add_edge(u, v, color='silver')
+            if p > max_p: max_p = p
+            if p >= random.random():
+                if Fmax[u] == Fmax[v]:
+                    G.add_edge(u,v, color=colors[Fmax[u]])
+                else:
+                    G.add_edge(u, v, color='silver')
         #print((Fmax[u], Fmax[v]))
-        if Fmax[u] == Fmax[v]:
-            G.add_edge(u,v, color=colors[Fmax[u]])
+    print("Max P:", max_p)
     return G
 
 
@@ -258,35 +271,44 @@ def random_main():
     plt.show()
 
 
-def garbage():
-    f = open('jaccard.txt', 'r')
-    user_to_user = eval(f.read())
+def write_to_file(data):
+    f = open('big_clam_users.txt', 'w')
+    f.write("{\n")
+    for num, line in enumerate(data.values()):
+        new_line = '"' + str(num) + '"' + ":" + str(line) + ",\n"
+        f.write(new_line.replace("\'", "\""))
+    f.write("}\n")
     f.close()
-    B = nx.from_dict_of_dicts(user_to_user)
-
-    # from B, create G, or adjacency network
-    adj2 = nx.adjacency_matrix(B)
-    adj = gen_adjacency(adj2, np.shape(adj2)[0])
 
 
 def main():
-    num_of_comms = 9
+    num_of_comms = 14
     # create social networkB
+
+    for i in range(num_of_comms):
+        communities[i] = []
 
     adj = create_new_adj()
     print(adj)
-    F = find_f(adj, num_of_comms, 1000)
+    F = find_f(adj, num_of_comms, 100)
     print(F)
     # np.argmax finds the node's highest community
     F_max = np.argmax(F, 1)
+    for user, c in enumerate(F_max):
+        communities[c].append(str(user_tags[user]))
+
+    write_to_file(communities)
+
     print("FMAX: ", F_max, " length: ", len(F_max))
     f_graph = gen_graph(F, F_max)
+    print("Graph data:")
+
     edges = f_graph.edges()
     colors = [f_graph[u][v]['color'] for u, v in edges]
     #nx.draw(f_graph, node_color="black", node_size=0.5, width=0.05, font_size=0.5, edge_color=colors, pos=nx.spring_layout(f_graph, iterations=200))
     nx.draw(f_graph, node_color="black", node_size=0.5, width=0.05, font_size=0.5, edge_color=colors,
             pos=nx.kamada_kawai_layout(f_graph))
-    plt.savefig('fig2.svg')
+    plt.savefig('fig6.svg')
     plt.show()
 
 
