@@ -27,6 +27,7 @@ Step-by-step:
 
 communities = {}
 user_tags = []
+post_tags = []
 
 test = [
     [0, 1.2, 0, 0.2],
@@ -78,6 +79,17 @@ def gen_rand_adjacency(G, N, threshold):
     return A
 
 
+# generates a {0,1} adjacency matrix
+def gen_adjacency(G, N):
+    A = np.zeros((N, N), dtype=np.int8)
+    for u in range(np.shape(G)[0]):
+        for v in range(np.shape(G)[0]):
+            #print((u, v), ">> ", G[u, v])
+            if G[u,v] > 0.0:
+                A[u,v] = 1
+    return A
+
+
 def create_gephy_graph():
     f = open('jaccard.txt', 'r')
     f2= open("jaccard_gephi.txt","w+")
@@ -93,7 +105,11 @@ def create_gephy_graph():
     f2.close()
 
 
-def create_new_adj():
+
+
+
+
+def create_node_adj():
     f = open('jaccard005.txt', 'r')
     user_to_user = eval(f.read())
     f.close()
@@ -111,16 +127,30 @@ def create_new_adj():
     return A
 
 
+def create_post_adj():
+    f = open('jaccard_post.tsv', 'r')
+    nodesu = {}
+    for num, line in enumerate(f):
+        if (num != 0):
+            line = line.replace("\n", "").split("\t")
+            curr_node = int(line[0])
+            other_node = int(line[1])
+            if curr_node not in nodesu:
+                nodesu[curr_node] = []
+            nodesu[curr_node].append(other_node)
+    f.close()
 
-# generates a {0,1} adjacency matrix
-def gen_adjacency(G, N):
-    A = np.zeros((N, N), dtype=np.int8)
-    for u in range(np.shape(G)[0]):
-        for v in range(np.shape(G)[0]):
-            #print((u, v), ">> ", G[u, v])
-            if G[u,v] > 0.0:
-                A[u,v] = 1
-    return A
+    B = nx.from_dict_of_lists(nodesu)
+    C = nx.to_numpy_matrix(B)
+
+    for num, i in enumerate(B):
+        post_tags.append(i)
+
+    return C
+
+create_post_adj()
+
+
 
 
 
@@ -204,7 +234,8 @@ def find_f(A, C, iterations=10):
         ll = log_likelihood(F, A)
         n += 1
         print('At step %5i/%5i ll is %5.3f / %5.3f' % (n, iterations, ll, np.abs((prevll-ll)/ll)))
-        if np.abs((prevll-ll)/ll) < 0.01 and n > iterations:
+        #if np.abs((prevll-ll)/ll) < 0.01 and n > iterations:
+        if n > iterations:
             break
         prevll = ll
     return F
@@ -216,8 +247,9 @@ def gen_graph(F, Fmax):
     :param F: fitted preferential matrix after bigClam has been run
     :param Fmax: Preferred communities of nodes in F
     """
+    print("Generating graph...")
     # create an empty graph
-    colors = ['red', 'pink', 'magenta', 'deeppink',
+    colors = ['red', 'pink', 'magenta', 'deeppink', 'crimson',
               'green', 'darkgreen', 'indigo', 'lime',
               'blue', 'darkcyan', 'navy', 'cyan',
               'yellow', 'orange', 'brown',
@@ -271,7 +303,7 @@ def random_main():
     plt.show()
 
 
-def write_to_file(data):
+def write_to_file_nodes(data):
     f = open('big_clam_users.txt', 'w')
     f.write("{\n")
     for num, line in enumerate(data.values()):
@@ -280,15 +312,24 @@ def write_to_file(data):
     f.write("}\n")
     f.close()
 
+def write_to_file_posts(data):
+    f = open('big_clam_posts.txt', 'w')
+    f.write("{\n")
+    for num, line in enumerate(data.values()):
+        new_line = '"' + str(num) + '"' + ":" + str(line) + ",\n"
+        f.write(new_line.replace("\'", "\""))
+    f.write("}\n")
+    f.close()
 
-def main():
-    num_of_comms = 14
+
+def node_to_node():
+    num_of_comms = 15
     # create social networkB
 
     for i in range(num_of_comms):
         communities[i] = []
 
-    adj = create_new_adj()
+    adj = create_node_adj()
     print(adj)
     F = find_f(adj, num_of_comms, 100)
     print(F)
@@ -297,7 +338,7 @@ def main():
     for user, c in enumerate(F_max):
         communities[c].append(str(user_tags[user]))
 
-    write_to_file(communities)
+    write_to_file_nodes(communities)
 
     print("FMAX: ", F_max, " length: ", len(F_max))
     f_graph = gen_graph(F, F_max)
@@ -305,13 +346,45 @@ def main():
 
     edges = f_graph.edges()
     colors = [f_graph[u][v]['color'] for u, v in edges]
-    #nx.draw(f_graph, node_color="black", node_size=0.5, width=0.05, font_size=0.5, edge_color=colors, pos=nx.spring_layout(f_graph, iterations=200))
-    nx.draw(f_graph, node_color="black", node_size=0.5, width=0.05, font_size=0.5, edge_color=colors,
+    nx.draw(f_graph, node_color="black", node_size=0.2, width=0.1, font_size=0.5, edge_color=colors,
             pos=nx.kamada_kawai_layout(f_graph))
-    plt.savefig('fig6.svg')
+    plt.savefig('node-to-node.png', quality=95)
     plt.show()
 
 
-main()
-#random_main()
+def post_to_post():
+    num_of_comms = 7
+    # create social networkB
+
+    for i in range(num_of_comms):
+        communities[i] = []
+
+    adj = create_post_adj()
+    print(adj)
+    F = find_f(adj, num_of_comms, 200)
+    print(F)
+    # np.argmax finds the node's highest community
+    F_max = np.argmax(F, 1)
+    for post, c in enumerate(F_max):
+        communities[c].append(str(post_tags[post]))
+
+    write_to_file_posts(communities)
+
+    print("FMAX: ", F_max, " length: ", len(F_max))
+    f_graph = gen_graph(F, F_max)
+    print("Graph data:")
+
+    """
+    edges = f_graph.edges()
+    colors = [f_graph[u][v]['color'] for u, v in edges]
+    nx.draw(f_graph, node_color="black", node_size=0.2, width=0.1, font_size=0.5, edge_color=colors,
+            pos=nx.kamada_kawai_layout(f_graph))
+    plt.savefig('post-to-post.png', quality=95)
+    plt.show()
+    """
+
+
+#node_to_node()
+post_to_post()
+
 
