@@ -74,10 +74,10 @@ public class FindCommunityTags {
     }
 
     public static void main(String[] args) throws Exception {
-        String postFile = "C:\\Users\\Achil\\Downloads\\dm\\Posts Type1_top1000_2019.tsv";
-        String commFile = "C:\\Users\\Achil\\Downloads\\dm\\comm-2019-100-0.8.csv";
-        String outputFile = "tags-2019-100-0.8";
-        int k = 10;
+        String postFile = args[0];
+        String commFile = args[1];
+        String outputFile = args[2];
+        int k = Integer.parseInt(args[3]);
         FindCommunityTags ft = new FindCommunityTags(postFile, commFile);
         ft.findCommTags(k, outputFile);
     }

@@ -61,6 +61,9 @@ public class PostsJaccardGraph {
         PrintWriter writer = new PrintWriter(new File(outputFile));
         DecimalFormat df = new DecimalFormat("#.00");
 
+        //header
+        writer.println("source\ttarget\tweight");
+
         for (int i = 0; i < numOfThreads; i++) {
             Runnable runnable = new Runnable() {
                 @Override
@@ -158,9 +161,9 @@ public class PostsJaccardGraph {
 
 
     public static void main(String[] args) throws Exception {
-        String inputFile = args[0];
-        String outputFile = args[1];
-        double threshold = 0.8;
+        String inputFile = "C:\\Users\\Achil\\Downloads\\dm\\2018-1000-0.8\\Posts Type1_top1000_2018.tsv";
+        String outputFile = "similarity_top1000_2018_00.1.tsv";//args[1];
+        double threshold = 0.01;
         PostsJaccardGraph sg = new PostsJaccardGraph(inputFile);
         sg.findSimilaritiesParallel(threshold, outputFile);
     }
