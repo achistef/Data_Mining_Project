@@ -413,7 +413,7 @@ def node_to_node(num_communities, num_steps):
     colors = [f_graph[u][v]['color'] for u, v in edges]
     nx.draw(f_graph, node_color="black", node_size=0.2, width=0.1, font_size=0.5, edge_color=colors,
             pos=nx.kamada_kawai_layout(f_graph))
-    plt.savefig('node-to-node.png', quality=95)
+    plt.savefig('node-to-node.png', quality=100)
     plt.show()
 
 
@@ -452,7 +452,7 @@ def post_to_post(num_communities, num_steps):
     plt.show()
 
 
-#node_to_node(15, 400)
-post_to_post(8, 400)
+node_to_node(15, 500)
+#post_to_post(7, 400)
 
 
