@@ -107,7 +107,7 @@ def handle_posts(user_dict):
                     user_dict[int(user_id)]['Questions'].append(post_id)
 
                 # Add Last editors if found
-                if last_editor_id and last_editor_id) != user_id and int(last_editor_id) in user_dict:
+                if last_editor_id and last_editor_id != user_id and int(last_editor_id) in user_dict:
                     user_dict[int(last_editor_id)]['Questions'].append(post_id)
 
         
