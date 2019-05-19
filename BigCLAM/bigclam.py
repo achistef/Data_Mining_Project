@@ -109,13 +109,37 @@ def create_gephy_graph():
 
 
 
+# check if a matrix is symmetric
+def transpose(mat, tr, N):
+    for i in range(N):
+        for j in range(N):
+            tr[i][j] = mat[j][i]
+
+def isSymmetric(mat, N):
+    tr = [[0 for j in range(len(mat[0]))] for i in range(len(mat))]
+    transpose(mat, tr, N)
+    for i in range(N):
+        for j in range(N):
+            if (mat[i][j] != tr[i][j]):
+                return False
+    return True
+
+
+
+
+
+
+
 def create_node_adj():
     f = open('jaccard005.txt', 'r')
     user_to_user = eval(f.read())
     f.close()
     B = nx.from_dict_of_dicts(user_to_user)
+    C = nx.to_numpy_matrix(B)
+
     m_size = len(B)
     A = np.zeros((m_size, m_size))
+    """
     for u, line in enumerate(B):
         user_tags.append(line)
         for v, item in enumerate(B[line]):
@@ -125,6 +149,18 @@ def create_node_adj():
             A[u, v] = 1
             A[v, u] = 1
     return A
+    """
+    for num, i in enumerate(B):
+        user_tags.append(i)
+
+    A = A + (C + C.T)/2
+    A = np.where(A > 0.0, 1, 0)
+
+    return A
+
+
+#create_node_adj()
+
 
 
 def create_post_adj():
@@ -143,14 +179,21 @@ def create_post_adj():
     B = nx.from_dict_of_lists(nodesu)
     C = nx.to_numpy_matrix(B)
 
+    m_size = len(B)
+    A = np.zeros((m_size, m_size))
+
     for num, i in enumerate(B):
         post_tags.append(i)
 
-    return C
+    A = A + (C + C.T) / 2
+    A = np.where(A > 0.0, 1, 0)
+
+    #print(isSymmetric(A, m_size))
+
+    return A
+
 
 create_post_adj()
-
-
 
 
 
@@ -224,20 +267,27 @@ def find_f(A, C, iterations=10):
     # 1. compute gradient of row u
     while True:
     #for n in range(iterations):
+        last_F = F.copy()
         for person in range(N):
             grad = gradient(F, A, person)
             # 2. update the row
             F[person] += 0.005 * grad
-
             # 3. Project Fu back to a non-negative vector
             F[person] = np.maximum(0.00000001, F[person])  # F should be nonnegative
-        ll = log_likelihood(F, A)
+        #ll = log_likelihood(F, A)
         n += 1
-        print('At step %5i/%5i ll is %5.3f / %5.3f' % (n, iterations, ll, np.abs((prevll-ll)/ll)))
-        #if np.abs((prevll-ll)/ll) < 0.01 and n > iterations:
-        if n > iterations:
+        f_norm = np.sum(np.multiply(F - last_F, F - last_F)) ** 0.5
+
+        print('At step %5i/%5i Frobenius: %5.3f' % (n, iterations, f_norm))
+
+        if n >= iterations:
+            break
+        """
+        print('At step %5i/%5i ll is %5.3f / %5.3f Frobenius: %5.3f' % (n, iterations, ll, np.abs((prevll-ll)/ll), f_norm))
+        if np.abs((prevll-ll)/ll) < 0.01 and n > iterations:
             break
         prevll = ll
+        """
     return F
 
 
@@ -249,10 +299,22 @@ def gen_graph(F, Fmax):
     """
     print("Generating graph...")
     # create an empty graph
-    colors = ['red', 'pink', 'magenta', 'deeppink', 'crimson',
-              'green', 'darkgreen', 'indigo', 'lime',
-              'blue', 'darkcyan', 'navy', 'cyan',
-              'yellow', 'orange', 'brown',
+    colors = ['red',
+              'green',
+              'blue',
+              'indigo',
+              'yellow',
+              'cyan',
+              'magenta',
+              'darkgreen',
+              'navy',
+              'pink',
+              'darkcyan',
+              'deeppink',
+              'crimson',
+              'orange',
+              'lime',
+              'brown',
               ]
     print("Len colors: ", len(colors))
     G = nx.Graph()
@@ -264,15 +326,15 @@ def gen_graph(F, Fmax):
     for pairs in combinations(G.nodes(), 2):
         [u, v] = pairs
         # create links
-        prob = 1 - np.exp(-F[u,:]*F[v,:].transpose())
+
+        prob = 1 - np.exp(-F[u,:]*F[v,:])
         for p in prob:
-            if p > max_p: max_p = p
             if p >= random.random():
                 if Fmax[u] == Fmax[v]:
                     G.add_edge(u,v, color=colors[Fmax[u]])
                 else:
-                    G.add_edge(u, v, color='silver')
-        #print((Fmax[u], Fmax[v]))
+                    G.add_edge(u, v, color='whitesmoke')
+
     print("Max P:", max_p)
     return G
 
@@ -322,27 +384,30 @@ def write_to_file_posts(data):
     f.close()
 
 
-def node_to_node():
-    num_of_comms = 15
+def node_to_node(num_communities, num_steps):
+    num_of_comms = num_communities
     # create social networkB
 
     for i in range(num_of_comms):
         communities[i] = []
 
+
     adj = create_node_adj()
     print(adj)
-    F = find_f(adj, num_of_comms, 100)
+    F = find_f(adj, num_of_comms, num_steps)
     print(F)
     # np.argmax finds the node's highest community
     F_max = np.argmax(F, 1)
+    print("FMAX: ", F_max, " length: ", len(F_max))
+
     for user, c in enumerate(F_max):
         communities[c].append(str(user_tags[user]))
 
     write_to_file_nodes(communities)
 
-    print("FMAX: ", F_max, " length: ", len(F_max))
     f_graph = gen_graph(F, F_max)
     print("Graph data:")
+    print(nx.info(f_graph))
 
     edges = f_graph.edges()
     colors = [f_graph[u][v]['color'] for u, v in edges]
@@ -352,8 +417,8 @@ def node_to_node():
     plt.show()
 
 
-def post_to_post():
-    num_of_comms = 7
+def post_to_post(num_communities, num_steps):
+    num_of_comms = num_communities
     # create social networkB
 
     for i in range(num_of_comms):
@@ -361,7 +426,7 @@ def post_to_post():
 
     adj = create_post_adj()
     print(adj)
-    F = find_f(adj, num_of_comms, 200)
+    F = find_f(adj, num_of_comms, num_steps)
     print(F)
     # np.argmax finds the node's highest community
     F_max = np.argmax(F, 1)
@@ -373,18 +438,21 @@ def post_to_post():
     print("FMAX: ", F_max, " length: ", len(F_max))
     f_graph = gen_graph(F, F_max)
     print("Graph data:")
+    print(nx.info(f_graph))
 
-    """
     edges = f_graph.edges()
     colors = [f_graph[u][v]['color'] for u, v in edges]
     nx.draw(f_graph, node_color="black", node_size=0.2, width=0.1, font_size=0.5, edge_color=colors,
             pos=nx.kamada_kawai_layout(f_graph))
+    """
+    nx.draw(f_graph, node_color="black", node_size=0.2, width=0.1, font_size=0.5, edge_color=colors,
+            pos=nx.spring_layout(f_graph, iterations=200))
+    """
     plt.savefig('post-to-post.png', quality=95)
     plt.show()
-    """
 
 
-#node_to_node()
-post_to_post()
+#node_to_node(15, 400)
+post_to_post(8, 400)
 
 
